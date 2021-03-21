@@ -16,7 +16,9 @@ class XmlSettingBinder : PersistentStateComponent<Settings>, SettingBinder {
     }
 
     override fun save(t: Settings?) {
-        loadState(t)
+        if (t != null) {
+            loadState(t)
+        }
     }
 
     private var settings: Settings? = null
@@ -25,7 +27,7 @@ class XmlSettingBinder : PersistentStateComponent<Settings>, SettingBinder {
         return settings
     }
 
-    override fun loadState(state: Settings?) {
+    override fun loadState(state: Settings) {
         this.settings = state?.copy()
     }
 

@@ -232,9 +232,9 @@ allprojects {
     targetCompatibility = 1.8
 
     repositories {
-        mavenLocal()
-        mavenCentral()
-        jcenter()
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter' }
+
     }
 }
 

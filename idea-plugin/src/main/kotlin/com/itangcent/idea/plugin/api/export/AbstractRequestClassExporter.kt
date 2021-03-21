@@ -23,6 +23,7 @@ import com.itangcent.intellij.config.rule.RuleComputer
 import com.itangcent.intellij.config.rule.computer
 import com.itangcent.intellij.context.ActionContext
 import com.itangcent.intellij.jvm.*
+import com.itangcent.intellij.jvm.duck.ArrayDuckType
 import com.itangcent.intellij.jvm.duck.DuckType
 import com.itangcent.intellij.jvm.element.ExplicitMethod
 import com.itangcent.intellij.jvm.element.ExplicitParameter
@@ -30,9 +31,11 @@ import com.itangcent.intellij.logger.Logger
 import com.itangcent.intellij.psi.ContextSwitchListener
 import com.itangcent.intellij.psi.JsonOption
 import com.itangcent.intellij.psi.PsiClassUtils
+import com.itangcent.intellij.psi.WrappedKV
 import com.itangcent.intellij.util.*
 import com.itangcent.utils.ExtensibleKit.fromJson
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
@@ -299,27 +302,46 @@ abstract class AbstractRequestClassExporter : ClassExporter, Worker {
     protected open fun processResponse(method: ExplicitMethod, request: Request) {
 
         var returnType: DuckType? = null
+        var returnTypes : MutableList<DuckType>? = mutableListOf();
         var fromRule = false
         val returnTypeByRule = ruleComputer!!.computer(ClassExportRuleKeys.METHOD_RETURN, method)
         if (returnTypeByRule.notNullOrBlank()) {
-            val resolvedReturnType = duckTypeHelper!!.resolve(returnTypeByRule!!.trim(), method.psi())
-            if (resolvedReturnType != null) {
-                returnType = resolvedReturnType
-                fromRule = true
+            var rules = returnTypeByRule!!.replace("[", "").replace("]", "").split(",")
+            if(rules.size>1) {
+                for (rule in rules) {
+                    var resolvedReturnType = duckTypeHelper!!.resolve(rule.trim(), method.psi())
+                    resolvedReturnType?.let { returnTypes!!.add(it) };
+                }
+                if (returnTypes.notNullOrEmpty()){
+                    fromRule = true
+                }
+            } else {
+                val resolvedReturnType = duckTypeHelper!!.resolve(returnTypeByRule.trim(), method.psi())
+                if (resolvedReturnType != null) {
+                    returnType = resolvedReturnType
+                    fromRule = true
+                }
             }
         }
         if (!fromRule) {
             returnType = method.getReturnType()
         }
 
-        if (returnType != null) {
+        if (returnType != null || returnTypes.notNullOrEmpty()) {
             try {
                 val response = Response()
-
+                var typedResponse:Any? = null;
                 requestHelper!!.setResponseCode(response, 200)
+                val kv: KV<String, Any?> = WrappedKV();
 
-                val typedResponse = parseResponseBody(returnType, fromRule, method)
-
+                typedResponse = if (returnTypes.notNullOrEmpty()) {
+                    for (duckType in returnTypes!!) {
+                        kv[duckType.name()]=parseResponseBody(duckType, fromRule, method)
+                    }
+                    kv
+                } else {
+                    parseResponseBody(returnType, fromRule, method)
+                }
                 val descOfReturn = docHelper!!.findDocByTag(method.psi(), "return")
                 if (descOfReturn.notNullOrBlank()) {
                     val methodReturnMain = ruleComputer.computer(ClassExportRuleKeys.METHOD_RETURN_MAIN, method)
