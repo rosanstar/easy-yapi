@@ -1,4 +1,4 @@
-rootProject.name = 'easy-yapi'
+rootProject.name = 'YapiIdeaPlugin'
 include 'idea-plugin'
 include 'common-api'
 

@@ -1,8 +1,8 @@
 <idea-plugin>
-    <id>com.itangcent.idea.plugin.easy-yapi</id>
-    <name>EasyYapi</name>
-    <version>2.1.8.183.0</version>
-    <vendor email="pentatangcent@gmail.com" url="https://github.com/tangcent">Tangcent</vendor>
+    <id>com.itangcent.idea.plugin.YapiIdeaPlugin</id>
+    <name>YapiIdeaPlugin</name>
+    <version>1.0.1</version>
+    <vendor email="461342325@qq.com">xuwj</vendor>
 
     <description><![CDATA[ Description will be added by gradle build]]></description>
 

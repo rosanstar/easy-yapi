@@ -304,13 +304,25 @@ abstract class AbstractRequestClassExporter : ClassExporter, Worker {
         var returnType: DuckType? = null
         var returnTypes : MutableList<DuckType>? = mutableListOf();
         var fromRule = false
-        val returnTypeByRule = ruleComputer!!.computer(ClassExportRuleKeys.METHOD_RETURN, method)
+        var returnTypeByRule = ruleComputer!!.computer(ClassExportRuleKeys.METHOD_RETURN, method)
+        var returnName = ruleComputer!!.computer(ClassExportRuleKeys.RETURN_NAME, method)
+        var nameMap: MutableMap<Int, String>? = mutableMapOf();
+        var commentMap: MutableMap<Int, String>? = mutableMapOf();
         if (returnTypeByRule.notNullOrBlank()) {
-            var rules = returnTypeByRule!!.replace("[", "").replace("]", "").split(",")
+            returnTypeByRule = returnTypeByRule!!.replace("[", "").replace("]", "");
+            returnName = returnName!!.replace("[", "").replace("]", "");
+            var rules = returnTypeByRule.split(",")
             if(rules.size>1) {
-                for (rule in rules) {
+                var returnNameString = returnName!!.split(",")
+                for ((index, rule) in rules.withIndex()) {
                     var resolvedReturnType = duckTypeHelper!!.resolve(rule.trim(), method.psi())
                     resolvedReturnType?.let { returnTypes!!.add(it) };
+                    if (returnNameString[index].contains(":")) {
+                        nameMap!![index] = returnNameString[index].split(":")[0]
+                        if (returnNameString[index].split(":").size == 3) {
+                            commentMap!![index] = returnNameString[index].split(":")[2]
+                        }
+                    }
                 }
                 if (returnTypes.notNullOrEmpty()){
                     fromRule = true
@@ -319,6 +331,13 @@ abstract class AbstractRequestClassExporter : ClassExporter, Worker {
                 val resolvedReturnType = duckTypeHelper!!.resolve(returnTypeByRule.trim(), method.psi())
                 if (resolvedReturnType != null) {
                     returnType = resolvedReturnType
+                    if (returnName!!.contains(":")) {
+                        var returnNameList = returnName!!.split(":")
+                        nameMap!![0] = returnNameList[0]
+                        if (returnNameList.size == 3) {
+                            commentMap!![0] = returnNameList[2]
+                        }
+                    }
                     fromRule = true
                 }
             }
@@ -333,15 +352,31 @@ abstract class AbstractRequestClassExporter : ClassExporter, Worker {
                 var typedResponse:Any? = null;
                 requestHelper!!.setResponseCode(response, 200)
                 val kv: KV<String, Any?> = WrappedKV();
+                var commentKV: HashMap<String,String> = HashMap<String,String>(1)
 
                 typedResponse = if (returnTypes.notNullOrEmpty()) {
-                    for (duckType in returnTypes!!) {
-                        kv[duckType.name()]=parseResponseBody(duckType, fromRule, method)
+                    for ((index,duckType) in returnTypes!!.withIndex()){
+                        var name = ""
+                        name = if (nameMap!![index].isNullOrEmpty()) {
+                            duckType.name()
+                        } else {
+                            nameMap!![index]!!
+                        }
+                        kv[name]=parseResponseBody(duckType, fromRule, method)
+                        commentKV[name] = commentMap!![index].toString()
                     }
                     kv
                 } else {
-                    parseResponseBody(returnType, fromRule, method)
+                    var name = ""
+                    name = if (nameMap!![0].isNullOrEmpty()) {
+                        returnType!!.name()
+                    } else {
+                        nameMap!![0]!!
+                    }
+                    kv[name]=parseResponseBody(returnType, fromRule, method)
+                    kv
                 }
+                kv["@comment"] = commentKV
                 val descOfReturn = docHelper!!.findDocByTag(method.psi(), "return")
                 if (descOfReturn.notNullOrBlank()) {
                     val methodReturnMain = ruleComputer.computer(ClassExportRuleKeys.METHOD_RETURN_MAIN, method)
