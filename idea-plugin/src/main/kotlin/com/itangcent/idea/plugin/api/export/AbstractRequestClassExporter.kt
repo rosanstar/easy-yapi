@@ -349,10 +349,10 @@ abstract class AbstractRequestClassExporter : ClassExporter, Worker {
         if (returnType != null || returnTypes.notNullOrEmpty()) {
             try {
                 val response = Response()
-                var typedResponse:Any? = null;
+                var typedResponse: Any?;
                 requestHelper!!.setResponseCode(response, 200)
                 val kv: KV<String, Any?> = WrappedKV();
-                var commentKV: HashMap<String,String> = HashMap<String,String>(1)
+                var commentKV: HashMap<String,String> = HashMap(1)
 
                 typedResponse = if (returnTypes.notNullOrEmpty()) {
                     for ((index,duckType) in returnTypes!!.withIndex()){
@@ -374,6 +374,7 @@ abstract class AbstractRequestClassExporter : ClassExporter, Worker {
                         nameMap!![0]!!
                     }
                     kv[name]=parseResponseBody(returnType, fromRule, method)
+                    commentKV[name] = commentMap!![0].toString()
                     kv
                 }
                 kv["@comment"] = commentKV
