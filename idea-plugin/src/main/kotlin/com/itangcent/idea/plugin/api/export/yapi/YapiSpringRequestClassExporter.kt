@@ -39,6 +39,11 @@ open class YapiSpringRequestClassExporter : SpringRequestClassExporter() {
 
     override fun processMethodParameter(request: Request, parameter: ExplicitParameterInfo, paramDesc: String?) {
 
+        val defaultReq = paramDesc?.contains(":required")
+
+        val paramDesc = paramDesc?.replace(":required", "")
+
+
         //RequestBody(json)
         if (isRequestBody(parameter.psi())) {
             requestHelper!!.setMethodIfMissed(request, HttpMethod.POST)
@@ -172,6 +177,10 @@ open class YapiSpringRequestClassExporter : SpringRequestClassExporter() {
 
         if (readParamDefaultValue.notNullOrBlank()) {
             parameter.defaultVal = readParamDefaultValue
+        }
+
+        if (parameter.required == null) {
+            parameter.required = defaultReq
         }
 
         if (parameter.required == null) {

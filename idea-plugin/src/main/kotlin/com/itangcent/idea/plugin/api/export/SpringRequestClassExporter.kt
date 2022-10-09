@@ -54,6 +54,7 @@ open class SpringRequestClassExporter : AbstractRequestClassExporter() {
 
     override fun processMethodParameter(request: Request, parameter: ExplicitParameterInfo, paramDesc: String?) {
 
+
         //RequestBody(json)
         if (isRequestBody(parameter.psi())) {
             setRequestBody(request, parameter.raw(), paramDesc)
