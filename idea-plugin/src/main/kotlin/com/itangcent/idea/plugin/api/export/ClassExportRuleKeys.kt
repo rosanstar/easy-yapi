@@ -103,6 +103,11 @@ object ClassExportRuleKeys {
             BooleanRuleMode.ANY
     )
 
+    val FIELD_IGNORE_ONLY: RuleKey<String> = SimpleRuleKey(
+            "field.ignore.only", StringRule::class,
+            StringRuleMode.SINGLE
+    )
+
     val CLASS_PREFIX_PATH: RuleKey<String> = SimpleRuleKey(
             "class.prefix.path", StringRule::class,
             StringRuleMode.SINGLE

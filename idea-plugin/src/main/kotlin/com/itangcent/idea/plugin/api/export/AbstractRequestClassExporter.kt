@@ -15,6 +15,7 @@ import com.itangcent.idea.plugin.Worker
 import com.itangcent.idea.plugin.WorkerStatus
 import com.itangcent.idea.plugin.api.ClassApiExporterHelper
 import com.itangcent.idea.plugin.api.MethodInferHelper
+import com.itangcent.idea.plugin.api.export.yapi.YapiPsiClassHelper
 import com.itangcent.idea.plugin.settings.SettingBinder
 import com.itangcent.idea.plugin.settings.group.JsonSetting
 import com.itangcent.idea.plugin.utils.SpringClassName
@@ -70,6 +71,9 @@ abstract class AbstractRequestClassExporter : ClassExporter, Worker {
 
     @Inject
     protected val psiClassHelper: PsiClassHelper? = null
+
+    @Inject
+    protected val yapiPsiClassHelper: YapiPsiClassHelper? = null
 
     @Inject
     protected val requestHelper: RequestHelper? = null
@@ -778,8 +782,8 @@ abstract class AbstractRequestClassExporter : ClassExporter, Worker {
                 return extras()[4]
             }
             val paramType = parameter.getType() ?: return null
-            val typeObject = psiClassHelper!!.getTypeObject(paramType, parameter.psi(),
-                    jsonSetting!!.jsonOptionForInput(JsonOption.READ_COMMENT))
+            val typeObject = yapiPsiClassHelper!!.getTypeObject(paramType, parameter.psi(),
+                    jsonSetting!!.jsonOptionForInput(JsonOption.READ_COMMENT),parameter)
             extras()[4] = typeObject
             return typeObject
         }

@@ -107,6 +107,18 @@ open class ContextualPsiClassHelper : DefaultPsiClassHelper() {
         return super.beforeParseFieldOrMethod(fieldName, fieldType, fieldOrMethod, resourcePsiClass, option, kv)
     }
 
+    fun beforeParseFieldOrMethod(fieldName: String, fieldType: DuckType, fieldOrMethod: ExplicitElement<*>, resourcePsiClass: ExplicitClass, option: Int, kv: KV<String, Any?>,methodName: String): Boolean {
+        parseContext.get()?.add(fieldName)
+        devEnv?.dev {
+            logger!!.info("path -> ${parseScriptContext.path()}")
+        }
+        ruleComputer!!.computer(ClassExportRuleKeys.FIELD_PARSE_BEFORE, fieldOrMethod, fieldOrMethod.psi())
+        if (ruleComputer.computer(ClassExportRuleKeys.FIELD_IGNORE_ONLY, fieldOrMethod, fieldOrMethod.psi())?.contains(methodName) == true) {
+            return false
+        }
+        return super.beforeParseFieldOrMethod(fieldName, fieldType, fieldOrMethod, resourcePsiClass, option, kv)
+    }
+
     override fun onIgnoredParseFieldOrMethod(fieldName: String, fieldType: DuckType, fieldOrMethod: ExplicitElement<*>, resourcePsiClass: ExplicitClass, option: Int, kv: KV<String, Any?>) {
         super.onIgnoredParseFieldOrMethod(fieldName, fieldType, fieldOrMethod, resourcePsiClass, option, kv)
         popField(fieldName)
